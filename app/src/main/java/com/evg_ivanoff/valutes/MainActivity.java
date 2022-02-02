@@ -23,7 +23,7 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         DownloadJSON downloadJSON = new DownloadJSON();
-        downloadJSON.execute();
+        downloadJSON.execute(jsonURL);
     }
 
     private static class DownloadJSON extends AsyncTask<String, Void, String> {
@@ -44,6 +44,7 @@ public class MainActivity extends AppCompatActivity {
                     result.append(line);
                     line = reader.readLine();
                 }
+                Log.i("MyResult", result.toString());
                 return result.toString();
             } catch (MalformedURLException e) {
                 e.printStackTrace();
@@ -53,7 +54,6 @@ public class MainActivity extends AppCompatActivity {
                 if (connection != null)
                     connection.disconnect();
             }
-            Log.i("result", result.toString());
             return null;
         }
 
