@@ -5,7 +5,9 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.RecyclerView;
 
+import android.content.Context;
 import android.content.SharedPreferences;
+import android.inputmethodservice.Keyboard;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
@@ -14,6 +16,7 @@ import android.text.TextWatcher;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -44,7 +47,6 @@ public class MainActivity extends AppCompatActivity {
     private SharedPreferences preferences;
     private double toConvertValue;
 
-    private Button btnConvert;
     private Button btnUpdate;
     private TextView editConvertValue;
     private RecyclerView recyclerValutes;
@@ -56,7 +58,6 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        btnConvert = findViewById(R.id.btnConvert);
         btnUpdate = findViewById(R.id.btnUpdate);
         editConvertValue = findViewById(R.id.editConvertValue);
         recyclerValutes = findViewById(R.id.recyclerValutes);
@@ -95,7 +96,9 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public boolean onKey(View view, int i, KeyEvent keyEvent) {
                 if(keyEvent.getAction() == KeyEvent.ACTION_DOWN && (i == KeyEvent.KEYCODE_ENTER)) {
-                    btnConvert.callOnClick();
+                    editConvertValue.clearFocus();
+                    InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+                    imm.hideSoftInputFromWindow(editConvertValue.getWindowToken(), InputMethodManager.HIDE_NOT_ALWAYS);
                     return true;
                 }
                 return false;
@@ -112,35 +115,6 @@ public class MainActivity extends AppCompatActivity {
             DownloadDataSet(s);
             Log.i("prefLog", "Префы загружены");
         }
-
-
-        btnConvert.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                if(toConvertValue != 0) {
-                    String str = null;
-                    str = editConvertValue.getText().toString();
-                    double convertValue = 0;
-                    try {
-                        convertValue = Double.parseDouble(str);
-                    } catch (NumberFormatException e) {
-                        editConvertValue.setText("0");
-                        convertValue = 0;
-                    }
-                    textViewConvertValue.setText(""+convertValue * toConvertValue);
-
-                    Iterator<Valute> valuteIterator = valutesList.iterator();
-                    while (valuteIterator.hasNext()) {
-                        Valute val = valuteIterator.next();
-                        Double valuteValue = val.getValue();
-                        val.setConvertValue(convertValue * valuteValue);
-                    }
-                    recyclerValutes.getAdapter().notifyDataSetChanged();
-                } else {
-                    Toast.makeText(MainActivity.this, "Выберите валюту!", Toast.LENGTH_SHORT).show();
-                }
-            }
-        });
 
         btnUpdate.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -201,4 +175,6 @@ public class MainActivity extends AppCompatActivity {
         recyclerValutes.addItemDecoration(new DividerItemDecoration(recyclerValutes.getContext(), DividerItemDecoration.VERTICAL));
         recyclerValutes.setAdapter(valuteAdapter);
     }
+
+
 }
