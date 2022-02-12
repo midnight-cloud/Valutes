@@ -64,8 +64,8 @@ public class MainActivity extends AppCompatActivity {
         textViewConvertValue = findViewById(R.id.textViewConvertValue);
         textViewConvertName = findViewById(R.id.textViewConvertName);
 
-        textViewConvertName.setText("");
-        textViewConvertValue.setText("");
+        textViewConvertName.setText("Валюта");
+        textViewConvertValue.setText("0");
 
         valuteClickListener = new ValuteAdapter.OnValuteClickListener() {
             @Override

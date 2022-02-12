@@ -45,12 +45,11 @@ public class ValuteAdapter extends RecyclerView.Adapter<ValuteAdapter.ViewHolder
         holder.textValuteShort.setText(valute.getCharCode());
         holder.textValuteFull.setText(valute.getName());
         holder.textValuteValue.setText(Double.toString(valute.getValue()));
-        holder.textValuteConvert.setText(new DecimalFormat("#.####").format(valute.getConvertValue())+" RUB");
 
         holder.itemView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                onClickListener.onValuteClick(valute, position);
+                onClickListener.onValuteClick(valute, holder.getAdapterPosition());
             }
         });
     }
@@ -61,13 +60,12 @@ public class ValuteAdapter extends RecyclerView.Adapter<ValuteAdapter.ViewHolder
     }
 
     public static class ViewHolder extends RecyclerView.ViewHolder{
-        final TextView textValuteShort, textValuteFull, textValuteValue, textValuteConvert;
+        final TextView textValuteShort, textValuteFull, textValuteValue;
         public ViewHolder(@NonNull View itemView) {
             super(itemView);
             textValuteFull = itemView.findViewById(R.id.textValuteFull);
             textValuteShort = itemView.findViewById(R.id.textValuteShort);
             textValuteValue = itemView.findViewById(R.id.textValuteValue);
-            textValuteConvert = itemView.findViewById(R.id.textConvertValue);
         }
     }
 

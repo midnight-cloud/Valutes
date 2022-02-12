@@ -44,11 +44,6 @@
                 android:layout_height="wrap_content"
                 android:text="@string/text_example" />
 
-            <TextView
-                android:id="@+id/textConvertValue"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="@string/text_example" />
         </LinearLayout>
     </LinearLayout>
 

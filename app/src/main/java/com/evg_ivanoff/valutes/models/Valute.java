@@ -18,7 +18,6 @@ public class Valute {
     @SerializedName("Previous")
     public double previous;
 
-    private double convertValue = 0;
 
     public Valute(String id, String numCode, String charCode, int nominal, String name, double value, double previous) {
         this.id = id;
@@ -30,13 +29,6 @@ public class Valute {
         this.previous = previous;
     }
 
-    public double getConvertValue() {
-        return convertValue;
-    }
-
-    public void setConvertValue(double convertValue) {
-        this.convertValue = convertValue;
-    }
 
     public String getCharCode() {
         return charCode;
