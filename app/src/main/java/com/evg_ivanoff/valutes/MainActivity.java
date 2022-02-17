@@ -1,15 +1,25 @@
 package com.evg_ivanoff.valutes;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.RecyclerView;
 
+import android.content.Context;
+import android.content.SharedPreferences;
+import android.inputmethodservice.Keyboard;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.View;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.evg_ivanoff.valutes.models.DailyJSON;
 import com.evg_ivanoff.valutes.models.Valute;
@@ -23,6 +33,7 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -33,42 +44,85 @@ public class MainActivity extends AppCompatActivity {
     private String jsonURL = "https://www.cbr-xml-daily.ru/daily_json.js";
     private Map<String, Valute> valutes = null;
     private List<Valute> valutesList = null;
+    private SharedPreferences preferences;
+    private double toConvertValue;
 
-    private Button btnConvert;
+    private Button btnUpdate;
     private TextView editConvertValue;
     private RecyclerView recyclerValutes;
+    private TextView textViewConvertValue;
+    private TextView textViewConvertName;
+    private ValuteAdapter.OnValuteClickListener valuteClickListener;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        btnConvert = findViewById(R.id.btnConvert);
+        btnUpdate = findViewById(R.id.btnUpdate);
         editConvertValue = findViewById(R.id.editConvertValue);
         recyclerValutes = findViewById(R.id.recyclerValutes);
+        textViewConvertValue = findViewById(R.id.textViewConvertValue);
+        textViewConvertName = findViewById(R.id.textViewConvertName);
 
+        textViewConvertName.setText("Валюта");
+        textViewConvertValue.setText("0");
 
+        valuteClickListener = new ValuteAdapter.OnValuteClickListener() {
+            @Override
+            public void onValuteClick(Valute valute, int position) {
+                Toast.makeText(MainActivity.this, "выбран "+valute.getCharCode(),Toast.LENGTH_SHORT).show();
+                textViewConvertName.setText(valute.getCharCode());
+                textViewConvertValue.setText("");
+                toConvertValue = valute.getValue();
 
-        DownloadJSON downloadJSON = new DownloadJSON();
-        downloadJSON.execute(jsonURL);
+                if(toConvertValue != 0) {
+                    String str = null;
+                    str = editConvertValue.getText().toString();
+                    double convertValue = 0;
+                    try {
+                        convertValue = Double.parseDouble(str);
+                    } catch (NumberFormatException e) {
+                        editConvertValue.setText("0");
+                        convertValue = 0;
+                    }
+                    textViewConvertValue.setText(new DecimalFormat("#.####").format(convertValue * toConvertValue));
+                } else {
+                    Toast.makeText(MainActivity.this, "Выберите валюту!", Toast.LENGTH_SHORT).show();
+                }
+            }
+        };
 
-        btnConvert.setOnClickListener(new View.OnClickListener() {
+        editConvertValue.setOnKeyListener(new View.OnKeyListener() {
+            @Override
+            public boolean onKey(View view, int i, KeyEvent keyEvent) {
+                if(keyEvent.getAction() == KeyEvent.ACTION_DOWN && (i == KeyEvent.KEYCODE_ENTER)) {
+                    editConvertValue.clearFocus();
+                    InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+                    imm.hideSoftInputFromWindow(editConvertValue.getWindowToken(), InputMethodManager.HIDE_NOT_ALWAYS);
+                    return true;
+                }
+                return false;
+            }
+        });
+
+        preferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+        String s = preferences.getString("jsonLine", null);
+        if (s == null){
+            DownloadJSON downloadJSON = new DownloadJSON();
+            downloadJSON.execute(jsonURL);
+            Log.i("prefLog", "Префы были пустые");
+        } else {
+            DownloadDataSet(s);
+            Log.i("prefLog", "Префы загружены");
+        }
+
+        btnUpdate.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                String str = null;
-                str = editConvertValue.getText().toString();
-                double convertValue = 0;
-                try {
-                    convertValue = Double.parseDouble(str);
-                } catch (NumberFormatException e) {
-                    convertValue = 0;
-                }
-                Iterator<Valute> valuteIterator = valutesList.iterator();
-                while(valuteIterator.hasNext()){
-                    Valute val = valuteIterator.next();
-                    Double valuteValue = val.getValue();
-                    val.setConvertValue(convertValue * valuteValue);
-                }
-                recyclerValutes.getAdapter().notifyDataSetChanged();
+                DownloadJSON downloadJSON = new DownloadJSON();
+                downloadJSON.execute(jsonURL);
+                Toast.makeText(MainActivity.this, "Данные обновлены", Toast.LENGTH_SHORT).show();
+                Log.i("prefLog", "Префы обновлены");
             }
         });
     }
@@ -91,6 +145,7 @@ public class MainActivity extends AppCompatActivity {
                     result.append(line);
                     line = reader.readLine();
                 }
+                preferences.edit().putString("jsonLine", result.toString()).apply();
                 return result.toString();
             } catch (MalformedURLException e) {
                 e.printStackTrace();
@@ -106,14 +161,20 @@ public class MainActivity extends AppCompatActivity {
         @Override
         protected void onPostExecute(String s) {
             super.onPostExecute(s);
-            Gson gson = new Gson();
-            DailyJSON dailyJSON = gson.fromJson(s, DailyJSON.class);
-            valutes = dailyJSON.valutes;
-            valutesList = new ArrayList<Valute>(valutes.values());
-
-            ValuteAdapter valuteAdapter = new ValuteAdapter(MainActivity.this, valutesList);
-            recyclerValutes.addItemDecoration(new DividerItemDecoration(recyclerValutes.getContext(), DividerItemDecoration.VERTICAL));
-            recyclerValutes.setAdapter(valuteAdapter);
+            DownloadDataSet(s);
         }
     }
+
+    private void DownloadDataSet(String s) {
+        Gson gson = new Gson();
+        DailyJSON dailyJSON = gson.fromJson(s, DailyJSON.class);
+        valutes = dailyJSON.valutes;
+        valutesList = new ArrayList<Valute>(valutes.values());
+
+        ValuteAdapter valuteAdapter = new ValuteAdapter(MainActivity.this, valutesList, valuteClickListener);
+        recyclerValutes.addItemDecoration(new DividerItemDecoration(recyclerValutes.getContext(), DividerItemDecoration.VERTICAL));
+        recyclerValutes.setAdapter(valuteAdapter);
+    }
+
+
 }

@@ -19,10 +19,17 @@ import java.util.List;
 public class ValuteAdapter extends RecyclerView.Adapter<ValuteAdapter.ViewHolder>{
     private final List<Valute> valutes;
     private final LayoutInflater inflater;
+    private final OnValuteClickListener onClickListener;
 
-    public ValuteAdapter(Context context, List<Valute> valutes) {
+
+    public ValuteAdapter(Context context, List<Valute> valutes, OnValuteClickListener onClickListener) {
         this.valutes = valutes;
         this.inflater = LayoutInflater.from(context);
+        this.onClickListener = onClickListener;
+    }
+
+    public interface OnValuteClickListener {
+        void onValuteClick(Valute valute, int position);
     }
 
     @NonNull
@@ -38,8 +45,13 @@ public class ValuteAdapter extends RecyclerView.Adapter<ValuteAdapter.ViewHolder
         holder.textValuteShort.setText(valute.getCharCode());
         holder.textValuteFull.setText(valute.getName());
         holder.textValuteValue.setText(Double.toString(valute.getValue()));
-        holder.textValuteConvert.setText(new DecimalFormat("#.####").format(valute.getConvertValue())+" RUB");
-        //String.format("%.2f", Double.toString(valute.getConvertValue()))
+
+        holder.itemView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                onClickListener.onValuteClick(valute, holder.getAdapterPosition());
+            }
+        });
     }
 
     @Override
@@ -48,13 +60,12 @@ public class ValuteAdapter extends RecyclerView.Adapter<ValuteAdapter.ViewHolder
     }
 
     public static class ViewHolder extends RecyclerView.ViewHolder{
-        final TextView textValuteShort, textValuteFull, textValuteValue, textValuteConvert;
+        final TextView textValuteShort, textValuteFull, textValuteValue;
         public ViewHolder(@NonNull View itemView) {
             super(itemView);
             textValuteFull = itemView.findViewById(R.id.textValuteFull);
             textValuteShort = itemView.findViewById(R.id.textValuteShort);
             textValuteValue = itemView.findViewById(R.id.textValuteValue);
-            textValuteConvert = itemView.findViewById(R.id.textConvertValue);
         }
     }
 
