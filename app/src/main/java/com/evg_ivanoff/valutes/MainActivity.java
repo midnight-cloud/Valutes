@@ -85,7 +85,7 @@ public class MainActivity extends AppCompatActivity {
                         editConvertValue.setText("0");
                         convertValue = 0;
                     }
-                    textViewConvertValue.setText(new DecimalFormat("#.####").format(convertValue * toConvertValue));
+                    textViewConvertValue.setText(new DecimalFormat("#.####").format(convertValue / toConvertValue));
                 } else {
                     Toast.makeText(MainActivity.this, "Выберите валюту!", Toast.LENGTH_SHORT).show();
                 }
@@ -110,10 +110,8 @@ public class MainActivity extends AppCompatActivity {
         if (s == null){
             DownloadJSON downloadJSON = new DownloadJSON();
             downloadJSON.execute(jsonURL);
-            Log.i("prefLog", "Префы были пустые");
         } else {
             DownloadDataSet(s);
-            Log.i("prefLog", "Префы загружены");
         }
 
         btnUpdate.setOnClickListener(new View.OnClickListener() {
